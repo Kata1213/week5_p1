@@ -12,21 +12,14 @@ public class Receipt {
 
     private BigDecimal tax;
 
+    private BigDecimal addTax(BigDecimal subTotal) {
+        BigDecimal taxTotal = subTotal.multiply(tax);
+        return subTotal.add(taxTotal);
+    }
+
     public double CalculateGrandTotal(List<Product> products, List<OrderItem> items) {
         BigDecimal subTotal = calculateSubtotal(products, items);
-
-        for (Product product : products) {
-            OrderItem curItem = findOrderItemByProduct(items, product);
-
-            BigDecimal reducedPrice = product.getPrice()
-                    .multiply(product.getDiscountRate())
-                    .multiply(new BigDecimal(curItem.getCount()));
-
-            subTotal = subTotal.subtract(reducedPrice);
-        }
-        BigDecimal taxTotal = subTotal.multiply(tax);
-        BigDecimal grandTotal = subTotal.add(taxTotal);
-
+        BigDecimal grandTotal = addTax(subTotal);
         return grandTotal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
@@ -46,8 +39,11 @@ public class Receipt {
         BigDecimal subTotal = new BigDecimal(0);
         for (Product product : products) {
             OrderItem item = findOrderItemByProduct(items, product);
-            BigDecimal itemTotal = product.getPrice().multiply(new BigDecimal(item.getCount()));
-            subTotal = subTotal.add(itemTotal);
+           // BigDecimal itemTotal = product.getPrice().multiply(new BigDecimal(item.getCount()));
+           // subTotal = subTotal.add(itemTotal);
+            subTotal = subTotal.add(product.getPrice().multiply(new BigDecimal(item.getCount())))
+                    .subtract(product.getPrice().multiply(product.getDiscountRate()).multiply(new BigDecimal(item.getCount())));
+
         }
         return subTotal;
     }
